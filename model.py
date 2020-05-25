@@ -11,12 +11,13 @@ def variance(y_hat, var_hat):
     sum_squares = (1/T) * (y_hat**2).sum(0)
     squared_sum = ((1/T) * y_hat.sum(0))**2
     epi_var = sum_squares - squared_sum
-    ale_var = (1/T) * (var_hat**2).sum(0)
+    ale_var = (1/T) * (var_hat).sum(0)
     return epi_var, ale_var
 
 class Model(torch.nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, dropout=0.5, device=torch.device("cpu"), num_layers=1, use_attention=False):
+    def __init__(self, input_size, hidden_size, output_size, dropout=0.5, device=torch.device("cpu"), num_layers=1):
         super(Model, self).__init__()
+
         self.device = device
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -24,7 +25,6 @@ class Model(torch.nn.Module):
         self.num_layers = num_layers
         #self.inlinear = nn.Linear(self.input_size, self.hidden_size)
         #self.relu = nn.ReLU()
-        self.use_attention = use_attention
         self.dropout = nn.Dropout(dropout)
         self.inDense = torch.nn.Sequential(
             nn.Linear(self.input_size, self.hidden_size),
@@ -32,13 +32,10 @@ class Model(torch.nn.Module):
             self.dropout
         )
 
-        if self.use_attention:
-            self.attention = Attention(self.hidden_size)
-
         self.lstm = torch.nn.LSTM(self.hidden_size,
                                   self.hidden_size,
                                   num_layers=num_layers,
-                                  dropout=dropout if num_layers > 1 else 0.0, # dropout only applied with more than one layer
+                                  dropout=0, # dropout only applied with more than one layer
                                   bidirectional=False,
                                   batch_first=True)
         #self.lstm = nn.LSTMCell(self.hidden_size, self.hidden_size) #nn.LSTMCell
@@ -96,12 +93,6 @@ class Model(torch.nn.Module):
         output, (h_t, c_t) = self.lstm(input, (h_t, c_t))
         lstm_outputs = self.dropout(output)
 
-        if self.use_attention:
-            query = lstm_outputs
-            context = lstm_outputs
-            values = lstm_outputs
-            lstm_outputs, weights = self.attention(query, context, values)
-
         output = self.outlinear(lstm_outputs)
 
         outputs = output[:, :, 0, None]
@@ -127,13 +118,6 @@ class Model(torch.nn.Module):
 
             future_input, (h_t, c_t) = self.lstm(future_input[:, None, :], (h_t, c_t))
             future_input = self.dropout(future_input)
-
-            if self.use_attention:
-                #forecasted_outputs = torch.stack(future_outputs, 1)
-                #all_outputs = torch.cat([outputs, forecasted_outputs], 1)
-                context = torch.cat([context,future_input],1)
-                query = future_input
-                future_input, weights = self.attention(query, context, context)
 
             future_input_logvariance = self.outlinear(future_input)
 

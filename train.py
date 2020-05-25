@@ -32,8 +32,8 @@ def main():
                   hidden_size=hidden_size,
                   num_layers=num_layers,
                   output_size=1,
-                  device=device,
-                  use_attention=use_attention)
+                  dropout=0.5,
+                  device=device)
 
     #model.load_state_dict(torch.load("/tmp/model_epoch_0.pth")["model"])
     model.train()
@@ -81,14 +81,20 @@ def main():
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-4)
 
+    cutoff_after_n_epochs=2
+    loss_thresshold = -1
+
     stats=list()
     for epoch in range(epochs):
 
-        trainloss = train_epoch(model,dataloader,optimizer, criterion, device)
+        trainloss = train_epoch(model,dataloader,optimizer, criterion, device, loss_thresshold)
         testmetrics, testloss = test_epoch(model,validdataloader,device, criterion, n_predictions=1)
         metric_msg = ", ".join([f"{name}={metric.compute():.2f}" for name, metric in testmetrics.items()])
-        msg = f"epoch {epoch}: train loss {trainloss:.2f}, test loss {testloss:.2f}, {metric_msg}"
+        msg = f"epoch {epoch}: train loss {trainloss.mean():.2f}, test loss {testloss:.2f}, {metric_msg}"
         print(msg)
+
+        idx = trainloss.sort()[1][int(len(trainloss) * 0.6)]
+        loss_thresshold = trainloss[idx]
 
         test_model(model, validdataset, device)
 
@@ -108,7 +114,8 @@ def main():
 
     df = pd.DataFrame(stats)
 
-def train_epoch(model, dataloader, optimizer, criterion, device):
+def train_epoch(model, dataloader, optimizer, criterion, device, loss_threshold=-1):
+    model.dropout.eval()
     iterator = tqdm(enumerate(dataloader), total=len(dataloader))
     losses = list()
     for idx, batch in iterator:
@@ -127,15 +134,18 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
         # y is used for teacher forcing during training
         y_pred, log_variances = model(x_data, y=y_true, date=doy)
         loss = criterion(y_pred, y_true, log_variances)
-        losses.append(loss)
-        loss.backward()
-        optimizer.step()
+
+        if loss < loss_threshold:
+            loss.backward()
+            optimizer.step()
+        losses.append(loss.detach())
         iterator.set_description(f"loss {loss:.4f}, mean log_variances {log_variances.mean():.6f}")
 
-    return torch.stack(losses).mean()
+    return torch.stack(losses)
 
 def test_epoch(model,dataloader, device, criterion, n_predictions):
-
+    # switch on dropout
+    model.dropout.train()
     metrics = dict(
         mae=ignite.metrics.MeanAbsoluteError(),
         mse=ignite.metrics.MeanSquaredError(),
@@ -180,12 +190,12 @@ def test_model(model, dataset, device):
         x = dataset.data[idx].astype(float)
         date = dataset.date[idx].astype(np.datetime64)
         N_seen_points = 250
-        N_predictions = 10
+        N_predictions = 50
 
         make_and_plot_predictions(model, x, date, N_seen_points=N_seen_points, N_predictions=N_predictions, device=device,meanstd=(dataset.mean,dataset.std))
         plt.show()
 
-        idx = 20
+        idx = 17
 
         x = dataset.data[idx].astype(float)
         date = dataset.date[idx].astype(np.datetime64)

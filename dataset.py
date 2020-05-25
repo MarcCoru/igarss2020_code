@@ -132,7 +132,22 @@ class ModisDataset(torch.utils.data.Dataset):
             else:
                 raise ValueError("smooth method either 'mean' or 'median'")
 
+        # fit harmonics on mean of train dataset
+        if False:
+            x = self.date.astype(np.datetime64())
+            year = pd.to_datetime(x[0]).year
+            year -= year[0]
+            doy = pd.to_datetime(x[0]).dayofyear / 365
+            t = np.array((year + doy) * 2 * np.pi)
+
+            est_amp, est_freq, est_phase, est_mean = fit_harmonic_regression(self.data.mean(0)[:,0], t)
+            data_fit = est_amp * np.sin(est_freq * t + est_phase) + est_mean
+
+            # remove first harmonic
+            self.data -= data_fit[None,:,None].repeat(self.data.shape[0],axis=0)
+
         self.x_data, self.y_data = transform_data(self.data, seq_len=self.seq_length)
+
 
     def load_npz(self):
         with np.load(self.dataset_local_npz, 'r', allow_pickle=True) as f:
@@ -232,6 +247,59 @@ class ModisDataset(torch.utils.data.Dataset):
 
         return x, y
 
+
+from scipy.optimize import leastsq
+def fit_harmonic_regression(data, t):
+
+    guess_mean = np.mean(data)
+    guess_std = 1.5#3*np.std(data)/(2**0.5)/(2**0.5)
+    guess_phase = -1.2
+    guess_freq = 1
+    guess_amp = 1
+
+    # we'll use this to plot our first estimate. This might already be good enough for you
+
+    #return data_first_guess
+
+
+    # Define the function to optimize, in this case, we want to minimize the difference
+    # between the actual data and our "guessed" parameters
+    optimize_func = lambda x: x[0]*np.sin(x[1]*t+x[2]) + x[3] - data
+    est_amp, est_freq, est_phase, est_mean = leastsq(optimize_func, [guess_amp, guess_freq, guess_phase, guess_mean])[0]
+
+    import matplotlib.pyplot as plt
+    data_first_guess = guess_amp*np.sin(guess_freq*t+guess_phase) + guess_mean
+    data_fit = est_amp*np.sin(est_freq*t+est_phase) + est_mean
+
+    """
+    fig, axs = plt.subplots(2,1)
+    ax = axs[0]
+    ax.plot(t, data, label='data', linewidth=0.5)
+    ax.plot(t, data_first_guess, label='initial parameter', linewidth=0.2)
+    ax.plot(t, data_fit, label='est parameter')
+    ax.legend()
+
+    ax = axs[1]
+    ax.plot(t, data - data_fit)
+    """
+
+    plt.show()
+
+    return est_amp, est_freq, est_phase, est_mean
+
+def plot_harmonic_regression(data,t,params):
+    import matplotlib.pyplot as plt
+    est_amp, est_freq, est_phase, est_mean = params
+
+    fine_t = np.arange(min(t),max(t),0.1)
+    data_fit=est_amp*np.sin(est_freq*fine_t+est_phase)+est_mean
+
+    fig,ax = plt.subplots(figsize=(12,4))
+    ax.plot(t, data)
+    #ax.plot(t, data_first_guess, label='first guess')
+    ax.plot(fine_t, data_fit, label='after fitting')
+    ax.legend()
+    plt.show()
 
 class Sentinel5Dataset(torch.utils.data.Dataset):
     def __init__(self,
