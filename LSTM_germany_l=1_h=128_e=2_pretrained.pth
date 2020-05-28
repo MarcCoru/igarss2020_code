@@ -1,0 +1,235 @@
+
+<!-- Program version: 15.2.100.24 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="title" content=" Link - LRZ Sync+Share "/>
+    <meta name="description" content="Share, sync and backup your files online"/>
+
+    <title>
+    Link - LRZ Sync+Share
+    </title>
+
+    
+    <script src="/js/picasso/lang.js"></script>
+
+    <link rel="stylesheet" href="/css/glyphicons/glyphicons-filetypes.css"/>
+    <link rel="stylesheet" href="/css/glyphicons/glyphicons.css"/>
+
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-theme.min.css"/>
+
+    <link rel="stylesheet" href="/css/picasso.css"/>
+    <link rel="stylesheet" href="/branding/web.css"/>
+
+
+    
+    <noscript>
+        <div class="pica-content pica-boxes">
+            <div class="pica-box alert alert-danger">
+                <h5>
+                    <span class="pica-glyph glyphicons glyphicons-exclamation-sign"></span>
+                    JavaScript is not enabled
+                </h5>
+
+                <a href="http://enable-javascript.com/" class="alert-link">
+                    Please enable JavaScript for best experience on this site.
+                </a>
+            </div>
+        </div>
+    </noscript>
+</head>
+
+<body class="wallpaper">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-1 col-sm-2 col-md-3 col-lg-3"></div>
+            <div class="col-xs-10 col-sm-8 col-md-6 col-lg-6 pica-relative">
+                <div class="pica-dialog">
+                    <div>
+
+    <div>
+        <div id="pica_logo_big" class="pica-space"></div>
+
+        <div class="pica-boxes">
+            <div class="pica-box pica-block-on-small">
+                <div class="pica-box-head clearfix">
+                    <h5 class="pull-left">
+                        <lang name="label_links"></lang>
+                        LSTM_germany_l&#61;1_h&#61;128_e&#61;2_pretrained.pth
+                    </h5>
+                </div>
+
+                <div class="pica-box-body">
+
+                    
+                    <div class="pica-full-width input-group pull-left">
+                        <input type="text" class="form-control"
+                               value="https://syncandshare.lrz.de/dl/fiVjX1gxZpmhSVLTfFTxmbRZ/LSTM_germany_l%3D1_h%3D128_e%3D2_pretrained.pth" readonly>
+                        <div class="input-group-btn">
+                            <button id="filelink_copy" class="btn btn-default"
+                                    data-tooltip="tooltip_copy_to_clip"
+                                    data-placement="bottom" title=""
+                                    data-original-title="Copy to clipboard">
+                                <i class="glyphicons glyphicons-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <input id="filelink_id" type="hidden" value="fiVjX1gxZpmhSVLTfFTxmbRZ" />
+                    <input id="filelink_token" type="hidden" value="" />
+
+                    
+                    
+                    
+                    <div class="pica-table">
+                        <div>
+                            <a id="filelink_download" class="pica-space-top btn btn-primary"
+                               href="https://syncandshare.lrz.de/dl/fiVjX1gxZpmhSVLTfFTxmbRZ/LSTM_germany_l%3D1_h%3D128_e%3D2_pretrained.pth">
+                                <lang name="label_downloads"></lang>
+                            </a>
+                        </div>
+
+                                            </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="pica-pipe-group pica-space-top text-center">
+            <a href="https://www.lrz.de/impressum" target="_blank">
+                <lang name="label_imprint"></lang>
+            </a>
+
+            <a href="https://www.lrz.de/datenschutzerklaerung" target="_blank">
+                <lang name="label_privacy_policy"></lang>
+            </a>
+
+                            <a href="http://www.powerfolder.com" target="_blank">
+                    <lang name="label_powered_by"></lang>
+                </a>
+                    </div>
+    </div>
+
+    <div id="pica_upload_dialog" class="pica-dialog-outside modal fade" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="upload_close_button" type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="pica-dialog-title modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <h5 class="pica-dialog-description"></h5>
+
+                
+                <div class="pica-dialog-scroll">
+                    <table id="upload_table"
+                           class="table table-striped table-hover pica-table-fixed">
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-xs-8">
+                        
+                        <span id="upload_file"
+                              class="pica-file btn btn-success pull-left">
+                            <lang name="button_add_file"></lang>
+                            <input id="upload_input_files" type="file" multiple />
+                        </span>
+                        <span id="upload_directory"
+                              class="pica-file btn btn-success pull-left">
+                            <lang name="button_add_directory"></lang>
+                            <input id="upload_input_directories" type="file"
+                                   multiple webkitdirectory mozdirectory />
+                        </span>
+                    </div>
+
+                    <div class="col-xs-4">
+                        <button id="upload_start_button" type="button"
+                                class="btn btn-primary" disabled>
+                            <lang name="button_upload"></lang>
+                        </button>
+                        <button id="upload_stop_button" type="button"
+                                class="btn btn-default">
+                            <lang name="button_cancel"></lang>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="ie_warning_dialog" class="modal fade" role="dialog">
+    <div class="pica-dialog-small modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="pica-dialog-title modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <h5 class="pica-dialog-description"></h5>
+
+                <div class="modal-footer text-center">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        <lang name="button_ok"></lang>
+                    </button>
+
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        <lang name="button_cancel"></lang>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-1 col-sm-2 col-md-3 col-lg-3"></div>
+        </div>
+    </div>
+
+    <script src="/js/jquery-3.3.1.min.js"></script>
+    <script src="/js/bootstrap/bootstrap.min.js"></script>
+
+    <script src="/js/picasso/helper.js"></script>
+    <script src="/js/picasso/notification.js"></script>
+    <script src="/js/picasso/picasso.js"></script>
+
+    <script src="/js/picasso/css-polyfill.js"></script>
+
+    <script type="application/javascript">
+        Picasso.set("baseUrl", "https://syncandshare.lrz.de");
+        Picasso.set("CSRF", "");
+
+        /* Finally update language stuff */
+        Picasso.Lang.update();
+
+        /* Check browser after page load */
+        $(document).ready(function () {
+            if (Picasso.Helper.isInternetExplorer()) {
+                Picasso.Notification.show(
+                        Picasso.Lang.get("notification_error_internet_explorer"),
+                        "warning", true);
+            }
+        });
+    </script>
+
+        <script src="/js/picasso/types/ui/table.js"></script>
+    <script src="/js/picasso/types/ui/dialog.js"></script>
+
+    
+    <script src="/js/picasso/pages/extern/getlink.js"></script>
+
+</body>
+</html>

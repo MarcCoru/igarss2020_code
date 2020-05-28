@@ -4,10 +4,13 @@ import numpy as np
 from tqdm.autonotebook import tqdm
 import os
 import matplotlib.pyplot as plt
-from model import Model, snapshot
+from model import Model, snapshot, restore
 import ignite.metrics
 import pandas as pd
 from dataset import transform_data
+
+N_SEEN_POINTS = 227
+N_PREDICTIONS = 50
 
 def main():
     if torch.cuda.is_available():
@@ -15,11 +18,11 @@ def main():
     else:
         device = torch.device("cpu")
 
-    num_layers = 1
-    hidden_size = 256
-    region = "germany"
+    num_layers = 3
+    hidden_size = 32
+    region = "canada"#"volcanopuyehue" #"germany"
     epochs = 100
-    include_time = False
+    include_time = True
     smooth = None
     use_attention = True
 
@@ -35,8 +38,12 @@ def main():
                   dropout=0.5,
                   device=device)
 
+    #restore("/data2/igarss2020/models/LSTM_germany_l=1_h=128_e=2.pth", model)
+
     #model.load_state_dict(torch.load("/tmp/model_epoch_0.pth")["model"])
     model.train()
+
+    remove_seasonality = False
 
     if True:
         dataset = ModisDataset(region=region,
@@ -45,14 +52,18 @@ def main():
                                augment=True,
                                overwrite=False,
                                include_time=include_time,
-                               filter_date=(None,None),
+                               filter_date=(None,"2010-01-01"),
+                               remove_seasonality=remove_seasonality,
                                smooth=smooth)
 
         validdataset = ModisDataset(region=region,
                                     fold="validate",
                                     znormalize=True,
+                                    znormalize_with_meanstd=(dataset.mean, dataset.std),
                                     augment=False,
+                                    filter_date=(None, None),
                                     include_time=include_time,
+                                    remove_seasonality=remove_seasonality,
                                     smooth=smooth)
 
     else:
@@ -96,7 +107,7 @@ def main():
         idx = trainloss.sort()[1][int(len(trainloss) * 0.6)]
         loss_thresshold = trainloss[idx]
 
-        test_model(model, validdataset, device)
+        test_model(model, validdataset, device, title=f"                 epoch {epoch}")
 
         model_name = name_pattern.format(region=region, num_layers=num_layers, hidden_size=hidden_size, epoch=epoch)
         pth = os.path.join(model_dir, model_name+".pth")
@@ -145,7 +156,7 @@ def train_epoch(model, dataloader, optimizer, criterion, device, loss_threshold=
 
 def test_epoch(model,dataloader, device, criterion, n_predictions):
     # switch on dropout
-    model.dropout.train()
+
     metrics = dict(
         mae=ignite.metrics.MeanAbsoluteError(),
         mse=ignite.metrics.MeanSquaredError(),
@@ -169,10 +180,12 @@ def test_epoch(model,dataloader, device, criterion, n_predictions):
                 doy = None
 
             # make single forward pass to get test loss
+            model.dropout.eval()
             y_pred,log_variances = model(x_data, date=doy)
             loss = criterion(y_pred, y_true, log_variances)
             losses.append(loss.cpu())
 
+            model.dropout.train()
             # make multiple MC dropout inferences for further metrics
             y_pred, epi_var, ale_var = model.predict(x_data, n_predictions, date=doy)
             for name, metric in metrics.items():
@@ -180,7 +193,7 @@ def test_epoch(model,dataloader, device, criterion, n_predictions):
 
     return metrics, torch.stack(losses).mean()
 
-def test_model(model, dataset, device):
+def test_model(model, dataset, device, title=""):
     from visualizations import make_and_plot_predictions
 
     if isinstance(dataset,ModisDataset):
@@ -189,10 +202,11 @@ def test_model(model, dataset, device):
 
         x = dataset.data[idx].astype(float)
         date = dataset.date[idx].astype(np.datetime64)
-        N_seen_points = 250
-        N_predictions = 50
+        N_seen_points = N_SEEN_POINTS
+        N_predictions = N_PREDICTIONS
 
-        make_and_plot_predictions(model, x, date, N_seen_points=N_seen_points, N_predictions=N_predictions, device=device,meanstd=(dataset.mean,dataset.std))
+        make_and_plot_predictions(model, x, date, N_seen_points=N_seen_points, N_predictions=N_predictions,
+                                  device=device,meanstd=(dataset.mean,dataset.std), title=f"Example {idx}" + title)
         plt.show()
 
         idx = 17
@@ -200,7 +214,7 @@ def test_model(model, dataset, device):
         x = dataset.data[idx].astype(float)
         date = dataset.date[idx].astype(np.datetime64)
         make_and_plot_predictions(model, x, date, N_seen_points=N_seen_points, N_predictions=N_predictions,
-                                  device=device,meanstd=(dataset.mean,dataset.std))
+                                  device=device,meanstd=(dataset.mean,dataset.std), title=f"Example {idx}")
         plt.show()
 
     elif isinstance(dataset,Sentinel5Dataset):
@@ -214,10 +228,8 @@ def test_model(model, dataset, device):
         d[:,:,0] = d[:,:,0] - dataset.mean
         d[:, :, 0] = d[:,:,0] / dataset.std
 
-        N_seen_points = 300
-        N_predictions = 20
 
-        make_and_plot_predictions(model, d[0], date, N_seen_points=N_seen_points, N_predictions=N_predictions,
+        make_and_plot_predictions(model, d[0], date, N_seen_points=N_SEEN_POINTS, N_predictions=N_PREDICTIONS,
                                   device=device)
         plt.show()
 

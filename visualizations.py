@@ -11,11 +11,12 @@ tumbluelight = "#64a0c8"
 tumgray = "#999999"
 tumlightgray = "#dad7cb"
 
-def make_and_plot_predictions(model, x, date, N_seen_points=250, N_predictions=50, ylim=None, device=torch.device('cpu'), store=None, meanstd=None):
+def make_and_plot_predictions(model, x, date, N_seen_points=250, N_predictions=50, ylim=None, device=torch.device('cpu'), store=None, meanstd=None, title=""):
 
     future = x.shape[0] - N_seen_points
 
     fig, axs = plt.subplots(3, 1, figsize=(14, 10))
+    fig.suptitle(title)
     axs = np.array(axs).reshape(-1)
 
     axs[0].set_title("epistemic uncertainty")
@@ -63,7 +64,8 @@ def make_and_plot_predictions(model, x, date, N_seen_points=250, N_predictions=5
     for ax in axs:
         ax.plot(date[:N_seen_points], x[:N_seen_points, 0], c="#000000", alpha=1, label="seen input sequence")
         ax.plot(date[N_seen_points:], x[N_seen_points:, 0], c="#000000", alpha=.1, label="unseen future")
-        ax.axvline(x=date[N_seen_points], ymin=0, ymax=1)
+        if N_seen_points < len(date):
+            ax.axvline(x=date[N_seen_points], ymin=0, ymax=1)
         if ylim is not None:
             ax.set_ylim(ylim)
         ax.plot(date[1:], mean[1:],c=tumorange)

@@ -25,7 +25,8 @@ class ModisDataset(torch.utils.data.Dataset):
                  augment=False,
                  smooth=None,
                  smooth_method="mean",
-                 dataset_normalizing_factor=1):
+                 znormalize_with_meanstd=None,
+                 remove_seasonality=False):
         super(ModisDataset).__init__()
 
         if region == "africa":
@@ -97,12 +98,16 @@ class ModisDataset(torch.utils.data.Dataset):
 
         data = self.data[:,:,1].astype(float)
         if znormalize:
-            self.mean = np.nanmean(data)
-            self.std = np.nanstd(data)
+            if znormalize_with_meanstd is None:
+                self.mean = np.nanmean(data)
+                self.std = np.nanstd(data)
+            else:
+                self.mean, self.std = znormalize_with_meanstd
+            print(self.mean, self.std)
             data -= self.mean
-            data /= self.std * dataset_normalizing_factor
+            data /= self.std
         else:
-            data /= 1e+4 * dataset_normalizing_factor
+            data /= 1e+4
             self.mean=0
             self.std=1
 
@@ -133,7 +138,7 @@ class ModisDataset(torch.utils.data.Dataset):
                 raise ValueError("smooth method either 'mean' or 'median'")
 
         # fit harmonics on mean of train dataset
-        if False:
+        if remove_seasonality:
             x = self.date.astype(np.datetime64())
             year = pd.to_datetime(x[0]).year
             year -= year[0]
