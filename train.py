@@ -125,7 +125,7 @@ def main():
 
     df = pd.DataFrame(stats)
 
-def train_epoch(model, dataloader, optimizer, criterion, device, loss_threshold=-1):
+def train_epoch(model, dataloader, optimizer, criterion, device, loss_threshold=None):
     model.dropout.eval()
     iterator = tqdm(enumerate(dataloader), total=len(dataloader))
     losses = list()
@@ -146,9 +146,9 @@ def train_epoch(model, dataloader, optimizer, criterion, device, loss_threshold=
         y_pred, log_variances = model(x_data, y=y_true, date=doy)
         loss = criterion(y_pred, y_true, log_variances)
 
-        if loss < loss_threshold:
-            loss.backward()
-            optimizer.step()
+        loss.backward()
+        optimizer.step()
+
         losses.append(loss.detach())
         iterator.set_description(f"loss {loss:.4f}, mean log_variances {log_variances.mean():.6f}")
 
