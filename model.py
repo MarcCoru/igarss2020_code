@@ -42,7 +42,7 @@ class Model(torch.nn.Module):
         self.outlinear = nn.Linear(self.hidden_size, self.output_size + 1)
         self.to(device)
 
-    def forward(self, input, future=0, y=None, date=None, date_future=None):
+    def forward(self, input, future=0, date=None, date_future=None):
         # reset the state of LSTM
         # the state is kept till the end of the sequence
 
@@ -59,7 +59,7 @@ class Model(torch.nn.Module):
         outputs, log_variances, (h_t, c_t), context = self.encode(input, h_t, c_t)
 
         if future > 0:
-            future_outputs, future_logvariances = self.decode(outputs, h_t, c_t, future,y=y, date=date_future, context=context)
+            future_outputs, future_logvariances = self.decode(outputs, h_t, c_t, future, date=date_future, context=context)
             outputs = torch.cat([outputs,future_outputs],1)
             log_variances = torch.cat([log_variances,future_logvariances],1)
 
@@ -100,14 +100,11 @@ class Model(torch.nn.Module):
 
         return outputs, log_variances, (h_t, c_t), lstm_outputs
 
-    def decode(self, outputs, h_t, c_t, future, y=None, date=None, return_states=False, context=None):
+    def decode(self, outputs, h_t, c_t, future, date=None, return_states=False, context=None):
         future_input = outputs[:, -1]
         future_outputs = list()
         future_logvariances = list()
         for i in range(future):
-            if y is not None and np.random.random() > 0.5:
-                future_input = y[:, [i]]  # teacher forcing
-                raise ValueError("Don't use teacher forcing")
             if date is not None:
                 # take next time instance [1,1]
                 next_date = date[:,i]

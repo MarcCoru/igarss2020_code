@@ -142,8 +142,7 @@ def train_epoch(model, dataloader, optimizer, criterion, device, loss_threshold=
             doy = None
 
         optimizer.zero_grad()
-        # y is used for teacher forcing during training
-        y_pred, log_variances = model(x_data, y=y_true, date=doy)
+        y_pred, log_variances = model(x_data, date=doy)
         loss = criterion(y_pred, y_true, log_variances)
 
         loss.backward()
