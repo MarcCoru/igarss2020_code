@@ -123,9 +123,10 @@ class ModisDataset(torch.utils.data.Dataset):
             doy = doy.astype(float) / 365
 
             # sinusoidal encoding
-            doy = np.sin(doy * 2 * np.pi)
+            doy_sin = np.sin(doy * 2 * np.pi)
+            doy_cos = np.cos(doy * 2 * np.pi)
 
-            self.data = np.dstack([values, doy])
+            self.data = np.dstack([values, doy_sin, doy_cos])
         else:
             self.data = values[:,:,None]
 

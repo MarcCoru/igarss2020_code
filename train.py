@@ -20,18 +20,19 @@ def main():
 
     num_layers = 3
     hidden_size = 32
-    region = "canada"#"volcanopuyehue" #"germany"
+    region = "germany"#"volcanopuyehue" #"germany"
     epochs = 100
-    include_time = True
+    include_time = False
     smooth = None
     use_attention = True
+    remove_seasonality = False
 
     model_dir="/data2/igarss2020/models/"
     log_dir = "/data2/igarss2020/models/"
     name_pattern = "LSTM_{region}_l={num_layers}_h={hidden_size}_e={epoch}"
     log_pattern = "LSTM_{region}_l={num_layers}_h={hidden_size}"
 
-    model = Model(input_size=1 if not include_time else 2,
+    model = Model(input_size=1 if not include_time else 3,
                   hidden_size=hidden_size,
                   num_layers=num_layers,
                   output_size=1,
@@ -43,7 +44,6 @@ def main():
     #model.load_state_dict(torch.load("/tmp/model_epoch_0.pth")["model"])
     model.train()
 
-    remove_seasonality = False
 
     if True:
         dataset = ModisDataset(region=region,
@@ -173,8 +173,8 @@ def test_epoch(model,dataloader, device, criterion, n_predictions):
             x_data = x_data.to(device)
             y_true = y_true.to(device)
 
-            if y_true.shape[2] == 2:
-                doy = x_data[:, :, 1]
+            if y_true.shape[2] == 3:
+                doy = x_data[:, :, 1:]
                 y_true = y_true[:, :, 0].unsqueeze(2)
             else:
                 doy = None

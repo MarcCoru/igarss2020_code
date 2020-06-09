@@ -51,7 +51,7 @@ class Model(torch.nn.Module):
 
         if date is not None:
             input = input[:,:,0]
-            input = torch.stack([input,date],2)
+            input = torch.cat([input.unsqueeze(-1),date],2)
 
         h_t = torch.zeros(self.num_layers, input.size(0), self.hidden_size, dtype=torch.float32).to(self.device)
         c_t = torch.zeros(self.num_layers, input.size(0), self.hidden_size, dtype=torch.float32).to(self.device)
@@ -107,12 +107,13 @@ class Model(torch.nn.Module):
         for i in range(future):
             if y is not None and np.random.random() > 0.5:
                 future_input = y[:, [i]]  # teacher forcing
+                raise ValueError("Don't use teacher forcing")
             if date is not None:
                 # take next time instance [1,1]
-                next_date = date[:,i].unsqueeze(0)
+                next_date = date[:,i]
 
                 # concatenate with future input and ensure [N, D] dimensions
-                future_input = torch.stack([future_input, next_date],2).squeeze(1)
+                future_input = torch.cat([future_input, next_date],1)
 
             future_input = self.inDense(future_input)
 

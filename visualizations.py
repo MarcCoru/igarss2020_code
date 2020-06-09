@@ -24,9 +24,9 @@ def make_and_plot_predictions(model, x, date, N_seen_points=250, N_predictions=5
     axs[2].set_title("combined uncertainty")
 
     x_ = torch.Tensor(x)[None, :].to(device)
-    if x_.shape[2] == 2:
-        doy_seen = x_[:, :N_seen_points, 1]
-        doy_future = x_[:, N_seen_points:, 1]
+    if x_.shape[2] == 3:
+        doy_seen = x_[:, :N_seen_points, 1:]
+        doy_future = x_[:, N_seen_points:, 1:]
     else:
         doy_seen = None
         doy_future=None
